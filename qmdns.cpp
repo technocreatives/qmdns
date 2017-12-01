@@ -136,6 +136,29 @@ void QmDNS::stopServiceBrowse(QString serviceType) {
     }
 }
 
+QList<QmDNSService*> QmDNS::getServices(QString serviceType) {
+    if (!initialized) {
+        throw std::runtime_error(std::string("QmDNS stopServiceDiscovery: not initialized"));
+    }
+
+    QmDNSBrowser* browser = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(browsersMutex);
+        Q_UNUSED(lock);
+
+        auto it = browsers.find(serviceType);
+        if (it != browsers.end()) {
+            browser = it->second;
+        }
+    }
+
+    if (browser != nullptr) {
+        return browser->getServices();
+    }
+
+    return QList<QmDNSService*>();
+}
+
 void QmDNS::clientCallback(AvahiClient* client, AvahiClientState state, void * userdata) {
     Q_UNUSED(client);
     Q_UNUSED(userdata);

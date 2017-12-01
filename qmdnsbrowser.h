@@ -2,6 +2,7 @@
 #define QMDNSBROWSER_H
 
 #include <QObject>
+#include <QList>
 
 #include <mutex>
 
@@ -24,6 +25,8 @@ public:
 
     void init(AvahiServiceBrowser* browser);
     void destroy();
+
+    QList<QmDNSService*> getServices();
 
     static void browserCallback(
         AvahiServiceBrowser* serviceBrowser, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event,

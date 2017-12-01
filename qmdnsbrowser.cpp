@@ -25,6 +25,18 @@ void QmDNSBrowser::destroy() {
     browser = nullptr;
 }
 
+QList<QmDNSService*> QmDNSBrowser::getServices() {
+    std::lock_guard<std::mutex> lock(servicesMutex);
+    Q_UNUSED(lock);
+
+    QList<QmDNSService*> list;
+    for (auto& s : services) {
+        list.append(s);
+    }
+
+    return list;
+}
+
 void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfIndex interface, AvahiProtocol protocol,
     AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, void* userdata) {
 
@@ -188,8 +200,6 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 }
 
 void QmDNSBrowser::serviceAdded() {
-    qDebug() << Q_FUNC_INFO;
-
     QmDNSService* s = reinterpret_cast<QmDNSService*>(sender());
     std::cout << "QmDNSBrowser serviceAdded: " << s->getName().toStdString()
               << " " << s->getHostname().toStdString()

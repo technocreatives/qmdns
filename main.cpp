@@ -6,7 +6,7 @@
 #include "qmdns.h"
 
 QmDNS mdns;
-QString type("_mqtt-n2k._tcp");
+QString type("_http._tcp");
 
 void start() {
 

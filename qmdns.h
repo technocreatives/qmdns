@@ -28,11 +28,10 @@ public:
     explicit QmDNS(QObject *parent = nullptr);
     virtual ~QmDNS();
 
-    void init(); // May thrown an exception
-
-    void startServiceBrowse(QString serviceType);
-
-    void stopServiceBrowse(QString serviceType);
+    Q_INVOKABLE void init();
+    Q_INVOKABLE void startServiceBrowse(QString serviceType);
+    Q_INVOKABLE void stopServiceBrowse(QString serviceType);
+    Q_INVOKABLE QList<QmDNSService*> getServices(QString serviceType);
 
 private:
     bool initialized = false;
