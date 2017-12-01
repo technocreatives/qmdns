@@ -21,19 +21,16 @@ QmDNS::~QmDNS() {
 
     /* Cleanup things */
 
-    std::vector<AvahiServiceBrowser*> list;
+    std::vector<QmDNSBrowser*> list;
     {
         std::lock_guard<std::mutex> lock(browsersMutex);
-        Q_UNUSED(browsersMutex);
+        Q_UNUSED(lock);
 
-        for (auto p : browsers) {
-            list.push_back(p.second);
+        for (auto& pair : browsers) {
+            delete pair.second;
         }
-        browsers.clear();
-    }
 
-    for (AvahiServiceBrowser* b : list) {
-        avahi_service_browser_free(b);
+        browsers.clear();
     }
 
     if (mDNSClient) {
@@ -97,7 +94,7 @@ void QmDNS::startServiceBrowse(QString serviceType) {
         std::lock_guard<std::mutex> lock(browsersMutex);
         Q_UNUSED(lock);
 
-        isBrowsingForService = browsers.find(serviceType.toStdString()) != browsers.end();
+        isBrowsingForService = browsers.find(serviceType) != browsers.end();
     }
 
     if (isBrowsingForService) {
@@ -105,205 +102,48 @@ void QmDNS::startServiceBrowse(QString serviceType) {
         return;
     }
 
-    AvahiServiceBrowser* browser = avahi_service_browser_new(mDNSClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
-        serviceType.toStdString().data(), NULL, (AvahiLookupFlags) 0, QmDNS::browserCallback, this);
+    QmDNSBrowser* browser = new QmDNSBrowser(this, serviceType);
 
-    if (browser == nullptr) {
+    AvahiServiceBrowser* serviceBrowser = avahi_service_browser_new(mDNSClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
+        serviceType.toStdString().data(), NULL, (AvahiLookupFlags) 0, QmDNSBrowser::browserCallback, browser);
+
+    if (serviceBrowser != nullptr) {
+        std::lock_guard<std::mutex> lock(browsersMutex);
+        Q_UNUSED(lock);
+
+        browser->init(serviceBrowser);
+        browsers.insert(std::make_pair(serviceType, browser));
+    } else {
+        delete browser;
         throw std::runtime_error(std::string("Failed to create service browser: %s\n", avahi_strerror(avahi_client_errno(mDNSClient))));
     }
 }
 
-void QmDNS::stopServiceBrowse(QString type) {
+void QmDNS::stopServiceBrowse(QString serviceType) {
     if (!initialized) {
         throw std::runtime_error(std::string("QmDNS stopServiceDiscovery: not initialized"));
     }
 
-    AvahiServiceBrowser* browser = nullptr;
     {
         std::lock_guard<std::mutex> lock(browsersMutex);
         Q_UNUSED(lock);
 
-        auto it = browsers.find(type.toStdString());
+        auto it = browsers.find(serviceType);
         if (it != browsers.end()) {
-            browser = it->second;
+            delete it->second;
             browsers.erase(it);
         }
-    }
-
-    if (browser) {
-        avahi_service_browser_free(browser);
     }
 }
 
 void QmDNS::clientCallback(AvahiClient* client, AvahiClientState state, void * userdata) {
+    Q_UNUSED(client);
+    Q_UNUSED(userdata);
+
     std::cout << "QmDNS clientCallback: " << avahiClientStateToStdString(state) << "\n";
 }
 
-void QmDNS::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfIndex interface, AvahiProtocol protocol,
-    AvahiBrowserEvent event, const char *name, const char *type, const char *domain, AvahiLookupResultFlags flags, void* userdata) {
 
-    QmDNS* self = reinterpret_cast<QmDNS*>(userdata);
 
-    std::cout << "QmDNS browserCallback: " << avahiBrowserEventToStdString(event)
-              << " " << interface
-              << " " << avahiProtocolToStdString(protocol)
-              << " " << type
-              << " " << domain
-              << " " << avahiLookupResultFlagsToStdString(flags)
-              <<  " " << name
-              << "\n";
-
-    if (event == AVAHI_BROWSER_NEW) {
-        AvahiClient* client = avahi_service_browser_get_client(serviceBrowser);
-
-        AvahiServiceResolver* resolver = avahi_service_resolver_new(
-            client, interface, protocol, name, type, domain,
-            static_cast<AvahiProtocol>(AVAHI_PROTO_UNSPEC), static_cast<AvahiLookupFlags>(0),
-            QmDNS::resolveCallback, userdata);
-
-        if (resolver != nullptr) {
-            std::lock_guard<std::mutex> lock(self->resolversMutex);
-            Q_UNUSED(lock);
-
-            auto it = self->resolvers.find(serviceBrowser);
-            if (it != self->resolvers.end()) {
-                // resolve list exist
-                it->second.push_back(resolver);
-            } else {
-                // resolve list don't exist
-                std::vector<AvahiServiceResolver*> list;
-                list.push_back(resolver);
-                self->resolvers.insert(std::make_pair(serviceBrowser, list));
-            }
-
-        } else {
-            std::cerr << "Failed to create service resolver for "
-                      << " " << interface
-                      << " " << avahiProtocolToStdString(protocol)
-                      << " " << type
-                      << " " << domain
-                      << " " << avahiLookupResultFlagsToStdString(flags)
-                      <<  " " << name
-                      << "\n";
-        }
-    }
-}
-
-void QmDNS::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event,
-        const char *name, const char *type, const char *domain, const char *host_name, const AvahiAddress *a, uint16_t port, AvahiStringList *txt,
-        AvahiLookupResultFlags flags, void *userdata) {
-
-    if (event == AVAHI_RESOLVER_FOUND) {
-        char address[AVAHI_ADDRESS_STR_MAX];
-        avahi_address_snprint(address, sizeof(address), a);
-
-        char* txtList = avahi_string_list_to_string(txt);
-
-        std::cout << "QmDNS resolveCallback success: " << avahiResolveEventToStdString(event)
-                  << " " << interface
-                  << " " << avahiProtocolToStdString(protocol)
-                  << " " << type
-                  << " " << domain
-                  << " " << address
-                  << " " << host_name
-                  << ":" << port
-                  << " " << avahiLookupResultFlagsToStdString(flags)
-                  << " " << name
-                  << " " << txtList
-                  << "\n";
-
-        avahi_free(txtList);
-    } else if (event == AVAHI_RESOLVER_FAILURE) {
-         std::cerr << "QmDNS resolveCallback failed:" << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver))) << "\n";
-    }
-}
-
-std::string avahiBrowserEventToStdString(AvahiBrowserEvent event) {
-    if (event == AVAHI_BROWSER_NEW) {
-        return std::string("New");
-    } else if (event == AVAHI_BROWSER_REMOVE) {
-        return std::string("Remove");
-    } else if (event == AVAHI_BROWSER_FAILURE) {
-        return std::string("Failure");
-    } else if (event == AVAHI_BROWSER_ALL_FOR_NOW) {
-        return std::string("All for now");
-    } else if (event == AVAHI_BROWSER_CACHE_EXHAUSTED) {
-        return std::string("Cache Exhausted");
-    } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(event)) + ")";
-    }
-}
-
-std::string avahiClientStateToStdString(AvahiClientState state) {
-    if (state == AVAHI_CLIENT_S_RUNNING) {
-        return std::string("Running");
-    } else if (state == AVAHI_CLIENT_S_REGISTERING) {
-        return std::string("Registering");
-    } else if (state == AVAHI_CLIENT_S_COLLISION) {
-        return std::string("Collision");
-    } else if (state == AVAHI_CLIENT_FAILURE) {
-        return std::string("Failure");
-    } else if (state == AVAHI_CLIENT_CONNECTING) {
-        return std::string("Connecting");
-    } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(state)) + ")";
-    }
-}
-
-std::string avahiLookupResultFlagsToStdString(AvahiLookupResultFlags flags) {
-    std::string s;
-
-    if (flags & AVAHI_LOOKUP_RESULT_CACHED) {
-        s += "cached,";
-    }
-
-    if (flags & AVAHI_LOOKUP_RESULT_WIDE_AREA) {
-        s += "wide,";
-    }
-
-    if (flags & AVAHI_LOOKUP_RESULT_MULTICAST) {
-        s += "multi";
-    }
-
-    if (flags & AVAHI_LOOKUP_RESULT_LOCAL) {
-        s += "local";
-    }
-
-    if (flags & AVAHI_LOOKUP_RESULT_OUR_OWN) {
-        s += "self";
-    }
-
-    if (flags & AVAHI_LOOKUP_RESULT_STATIC) {
-        s += "static,";
-    }
-
-    if (s.empty()) {
-        s += "none";
-    }
-
-    return s;
-}
-
-std::string avahiResolveEventToStdString(AvahiResolverEvent event) {
-    if (event == AVAHI_RESOLVER_FOUND) {
-        return "Found";
-    } else if (event == AVAHI_RESOLVER_FAILURE) {
-        return "Failure";
-    } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(event)) + ")";
-    }
-}
-
-std::string avahiProtocolToStdString(AvahiProtocol protocol) {
-    if (protocol == AVAHI_PROTO_INET) {
-        return std::string("IPv4");
-    } else if (protocol == AVAHI_PROTO_INET6) {
-        return std::string("IPv6");
-    } else if (protocol == AVAHI_PROTO_UNSPEC) {
-        return std::string("Unspecified");
-    } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(protocol)) + ")";
-    }
-}
 
 #endif // linux

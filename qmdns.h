@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QMap>
 
+#include "qmdnsbrowser.h"
 #include "qmdnsservice.h"
 
 #include <map>
@@ -42,42 +43,13 @@ private:
 
     std::thread worker;
 
-    std::mutex resolversMutex;
-    std::map<AvahiServiceBrowser*, std::vector<AvahiServiceResolver*>> resolvers;
-
     std::mutex browsersMutex;
-    std::map<std::string, AvahiServiceBrowser*> browsers;
+    std::map<QString, QmDNSBrowser*> browsers;
 
     static void clientCallback(
         AvahiClient* client,
         AvahiClientState state,
         void * userdata);
-
-    static void browserCallback(
-        AvahiServiceBrowser* serviceBrowser,
-        AvahiIfIndex interface,
-        AvahiProtocol protocol,
-        AvahiBrowserEvent event,
-        const char *name,
-        const char *type,
-        const char *domain,
-        AvahiLookupResultFlags flags,
-        void* userdata);
-
-    static void resolveCallback(
-        AvahiServiceResolver *resolver,
-        AvahiIfIndex interface,
-        AvahiProtocol protocol,
-        AvahiResolverEvent event,
-        const char *name,
-        const char *type,
-        const char *domain,
-        const char *host_name,
-        const AvahiAddress *a,
-        uint16_t port,
-        AvahiStringList *txt,
-        AvahiLookupResultFlags flags,
-        void *userdata);
 
     #endif
 

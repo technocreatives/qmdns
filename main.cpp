@@ -7,7 +7,10 @@
 
 int main(int argc, char *argv[])
 {
-    QString type("_mqtt-n2k._tcp");
+    Q_UNUSED(argc);
+    Q_UNUSED(argv);
+
+    QString type("_http._tcp");
 
     QmDNS mdns;
 
@@ -15,7 +18,7 @@ int main(int argc, char *argv[])
         mdns.init();
         mdns.startServiceBrowse(type);
 
-        QThread::sleep(60);
+        QThread::sleep(20);
 
         mdns.stopServiceBrowse(type);
 
