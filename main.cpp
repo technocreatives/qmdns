@@ -4,19 +4,20 @@
 #include <iostream>
 
 #include "qmdns.h"
-#include "main.h"
 
 int main(int argc, char *argv[])
 {
+    QString type("_mqtt-n2k._tcp");
+
     QmDNS mdns;
 
     try {
         mdns.init();
-        mdns.startServiceDiscovery("_mqtt-n2k._tcp");
+        mdns.startServiceBrowse(type);
 
         QThread::sleep(60);
 
-        mdns.stopServiceDiscovery();
+        mdns.stopServiceBrowse(type);
 
     } catch (const std::exception& e) {
         std::cout << "Interrupted by exception: " << e.what() << "\n";
