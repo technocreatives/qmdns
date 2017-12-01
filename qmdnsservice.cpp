@@ -73,5 +73,5 @@ bool QmDNSService::isResolved() const {
 void QmDNSService::setResolved() {
     this->resolved = true;
 
-    emit resolvedChanged(true);
+    emit serviceResolved();
 }

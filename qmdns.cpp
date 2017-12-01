@@ -143,7 +143,4 @@ void QmDNS::clientCallback(AvahiClient* client, AvahiClientState state, void * u
     std::cout << "QmDNS clientCallback: " << avahiClientStateToStdString(state) << "\n";
 }
 
-
-
-
 #endif // linux

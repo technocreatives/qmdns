@@ -19,7 +19,7 @@ class QmDNSService : public QObject
     Q_PROPERTY(QString ipv6Address READ getIPv6Address)
     Q_PROPERTY(QStringList txt READ getTxt)
 
-    Q_PROPERTY(bool resolved READ isResolved NOTIFY resolvedChanged)
+    Q_PROPERTY(bool resolved READ isResolved)
 
 public:
     explicit QmDNSService(QObject *parent = nullptr, int ifIndex = -1, QString name = "", QString type = "", QString domain = "");
@@ -62,7 +62,7 @@ private:
     QStringList txt;
 
 signals:
-    void resolvedChanged(bool);
+    void serviceResolved();
 
 public slots:
 };

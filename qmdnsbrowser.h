@@ -49,6 +49,8 @@ private:
 signals:
 
 public slots:
+    void serviceAdded();
+
 };
 
 #endif // QMDNSBROWSER_H

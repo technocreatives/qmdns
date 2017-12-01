@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <QDebug>
 
 QmDNSBrowser::QmDNSBrowser(QObject *parent, QString serviceType) : QObject(parent), serviceType(serviceType) {
 
@@ -61,6 +62,7 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
 
             if (entry == nullptr) {
                 entry = new QmDNSService(nullptr, i, n, t, d);
+                connect(entry, &QmDNSService::serviceResolved, self, &QmDNSBrowser::serviceAdded);
                 self->services.push_back(entry);
             }
         }
@@ -171,6 +173,7 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
          std::cerr << "QmDNSBrowser resolveCallback: " << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver))) << "\n";
     }
 
+    /*
     {
         std::lock_guard<std::mutex> lock(self->resolversMutex);
         Q_UNUSED(lock);
@@ -181,4 +184,15 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
         }
     }
     avahi_service_resolver_free(resolver);
+    */
+}
+
+void QmDNSBrowser::serviceAdded() {
+    qDebug() << Q_FUNC_INFO;
+
+    QmDNSService* s = reinterpret_cast<QmDNSService*>(sender());
+    std::cout << "QmDNSBrowser serviceAdded: " << s->getName().toStdString()
+              << " " << s->getHostname().toStdString()
+              << "/" << s->getIPv4Address().toStdString()
+              << ":" << s->getPort() << "\n";
 }
