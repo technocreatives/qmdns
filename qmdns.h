@@ -28,8 +28,21 @@ public:
     explicit QmDNS(QObject *parent = nullptr);
     virtual ~QmDNS();
 
+#ifdef linux
+    enum Protocol {
+        IPV4_AND_IPV6 = AVAHI_PROTO_UNSPEC,
+        IPV4 = AVAHI_PROTO_INET,
+        IPV6 = AVAHI_PROTO_INET6
+    };
+#else
+    enum Protocol {
+        IPV4_AND_IPV6, IPV4, IPV6
+    };
+#endif
+    Q_ENUM(Protocol);
+
     Q_INVOKABLE void init();
-    Q_INVOKABLE void startServiceBrowse(QString serviceType);
+    Q_INVOKABLE void startServiceBrowse(QString serviceType, Protocol protocol = IPV4_AND_IPV6);
     Q_INVOKABLE void stopServiceBrowse(QString serviceType);
     Q_INVOKABLE QList<QmDNSService*> getServices(QString serviceType);
 

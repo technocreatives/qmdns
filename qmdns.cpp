@@ -104,7 +104,7 @@ void QmDNS::init() {
     worker = std::thread([&](){ avahi_simple_poll_loop(mDNSPoll); });
 }
 
-void QmDNS::startServiceBrowse(QString serviceType) {
+void QmDNS::startServiceBrowse(QString serviceType, Protocol protocol) {
     bool isBrowsingForService = false;
     {
         std::lock_guard<std::mutex> lock(browsersMutex);
@@ -124,7 +124,7 @@ void QmDNS::startServiceBrowse(QString serviceType) {
     connect(browser, &QmDNSBrowser::serviceResolved, this, &QmDNS::browserServiceResolved);
     connect(browser, &QmDNSBrowser::serviceNotResolved, this, &QmDNS::browserServiceNotResolved);
 
-    AvahiServiceBrowser* serviceBrowser = avahi_service_browser_new(mDNSClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
+    AvahiServiceBrowser* serviceBrowser = avahi_service_browser_new(mDNSClient, AVAHI_IF_UNSPEC, static_cast<AvahiProtocol>(protocol),
         serviceType.toStdString().data(), NULL, (AvahiLookupFlags) 0, QmDNSBrowser::browserCallback, browser);
 
     if (serviceBrowser != nullptr) {
@@ -199,8 +199,9 @@ void QmDNS::init() {
     // Stub
 }
 
-void QmDNS::startServiceBrowse(QString serviceType) {
+void QmDNS::startServiceBrowse(QString serviceType, Protocol protocol) {
     Q_UNUSED(serviceType);
+    Q_UNUSED(protocol);
     // Stub
 }
 
