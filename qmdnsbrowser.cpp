@@ -14,17 +14,26 @@ QmDNSBrowser::~QmDNSBrowser() {
     destroy();
 }
 
+#ifdef linux
 void QmDNSBrowser::init(AvahiServiceBrowser *browser) {
     this->browser = browser;
 }
+#endif
 
+#ifdef linux
 void QmDNSBrowser::destroy() {
     if (browser) {
         avahi_service_browser_free(browser);
     }
     browser = nullptr;
 }
+#else
+void QmDNSBrowser::destroy() {
+    //Stub
+}
+#endif
 
+#ifdef linux
 QList<QmDNSService*> QmDNSBrowser::getServices() {
     std::lock_guard<std::mutex> lock(servicesMutex);
     Q_UNUSED(lock);
@@ -241,3 +250,4 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 
     avahi_service_resolver_free(resolver);
 }
+#endif

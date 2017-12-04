@@ -12,6 +12,22 @@ QmDNS::QmDNS(QObject *parent) : QObject(parent) {
 
 }
 
+void QmDNS::browserServiceFound(QmDNSService* service) {
+    emit serviceFound(service);
+}
+
+void QmDNS::browserServiceLost(QmDNSService* service) {
+    emit serviceLost(service);
+}
+
+void QmDNS::browserServiceResolved(QmDNSService* service) {
+    emit serviceResolved(service);
+}
+
+void QmDNS::browserServiceNotResolved(QmDNSService* service) {
+    emit serviceNotResolved(service);
+}
+
 #ifdef linux
 
 QmDNS::~QmDNS() {
@@ -165,27 +181,37 @@ QList<QmDNSService*> QmDNS::getServices(QString serviceType) {
     return QList<QmDNSService*>();
 }
 
-void QmDNS::browserServiceFound(QmDNSService* service) {
-    emit serviceFound(service);
-}
-
-void QmDNS::browserServiceLost(QmDNSService* service) {
-    emit serviceLost(service);
-}
-
-void QmDNS::browserServiceResolved(QmDNSService* service) {
-    emit serviceResolved(service);
-}
-
-void QmDNS::browserServiceNotResolved(QmDNSService* service) {
-    emit serviceNotResolved(service);
-}
-
 void QmDNS::clientCallback(AvahiClient* client, AvahiClientState state, void * userdata) {
     Q_UNUSED(client);
     Q_UNUSED(userdata);
 
     qDebug("QmDNS clientCallback: %s", qUtf8Printable(avahiClientStateToQString(state)));
+}
+
+#else
+
+QmDNS::~QmDNS() {
+    // Stub
+}
+
+void QmDNS::init() {
+    // Stub
+}
+
+void QmDNS::startServiceBrowse(QString serviceType) {
+    Q_UNUSED(serviceType);
+    // Stub
+}
+
+void QmDNS::stopServiceBrowse(QString serviceType) {
+    Q_UNUSED(serviceType);
+    // Stub
+}
+
+QList<QmDNSService*> QmDNS::getServices(QString serviceType) {
+    Q_UNUSED(serviceType);
+    // Stub
+    return QList<QmDNSService*>();
 }
 
 #endif // linux
