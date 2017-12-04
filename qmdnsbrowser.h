@@ -50,9 +50,13 @@ private:
     std::vector<QmDNSService*> services;
 
 signals:
+    void serviceFound(QmDNSService* service);
+    void serviceLost(QmDNSService* service);
+    void serviceResolved(QmDNSService* service);
+    void serviceNotResolved(QmDNSService* service);
 
 public slots:
-    void serviceAdded();
+
 
 };
 

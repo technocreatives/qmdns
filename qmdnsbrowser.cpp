@@ -54,6 +54,7 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
             << name;
 
         // Add service entry
+        QmDNSService* entry = nullptr;
         {
             std::lock_guard<std::mutex> lock(self->servicesMutex);
             Q_UNUSED(lock);
@@ -63,7 +64,6 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
             QString d(domain);
             QString t(type);
 
-            QmDNSService* entry = nullptr;
             for (auto p : self->services) {
                 if (i == p->getInterface() && n == p->getName()) {
                     entry = p;
@@ -73,9 +73,14 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
 
             if (entry == nullptr) {
                 entry = new QmDNSService(self, i, n, t, d);
-                connect(entry, &QmDNSService::serviceResolved, self, &QmDNSBrowser::serviceAdded);
                 self->services.push_back(entry);
+                emit self->serviceFound(entry);
             }
+        }
+
+        if (entry == nullptr) {
+            qWarning() << "QmDNS browserCallback: service not created or found";
+            return;
         }
 
         AvahiClient* client = avahi_service_browser_get_client(serviceBrowser);
@@ -97,6 +102,36 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
                       << domain
                       << qUtf8Printable(avahiLookupResultFlagsToQString(flags))
                       << name;
+
+            entry->setResolutionStatus(QmDNSService::RESOLUTION_FAILURE);
+            emit self->serviceNotResolved(entry);
+        }
+    } else if (event == AVAHI_BROWSER_REMOVE) {
+        // Add service entry
+        QmDNSService* entry = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(self->servicesMutex);
+            Q_UNUSED(lock);
+
+            int i = static_cast<int>(interface);
+            QString n(name);
+            QString d(domain);
+            QString t(type);
+
+            for (auto p : self->services) {
+                if (i == p->getInterface() && n == p->getName()) {
+                    entry = p;
+                    break;
+                }
+            }
+
+            if (entry != nullptr) {
+                std::remove(self->services.begin(), self->services.end(), entry);
+            }
+        }
+
+        if (entry != nullptr) {
+            emit self->serviceLost(entry);
         }
     }
 }
@@ -109,6 +144,21 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 
     qDebug() << "QmDNSBrowser resolveCallback success: " << avahiResolveEventToQString(event);
 
+    int i = static_cast<int>(interface);
+    QString n(name);
+    QmDNSService* entry = nullptr;
+    for (auto p : self->services) {
+        if (i == p->getInterface() && n == p->getName()) {
+            entry = p;
+            break;
+        }
+    }
+
+    if (entry == nullptr) {
+        qWarning() << "QmDNSBrowser resolveCallback: service entry not found";
+        return;
+    }
+
     if (event == AVAHI_RESOLVER_FOUND) {
         char address[AVAHI_ADDRESS_STR_MAX];
         avahi_address_snprint(address, sizeof(address), a);
@@ -117,17 +167,6 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
         {
             std::lock_guard<std::mutex> lock(self->servicesMutex);
             Q_UNUSED(lock);
-
-            int i = static_cast<int>(interface);
-            QString n(name);
-
-            QmDNSService* entry = nullptr;
-            for (auto p : self->services) {
-                if (i == p->getInterface() && n == p->getName()) {
-                    entry = p;
-                    break;
-                }
-            }
 
             if (entry != nullptr) {
                 if (protocol == AVAHI_PROTO_INET) {
@@ -158,7 +197,14 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
                 }
 
                 if (entry->getIPv4Address().size() > 0 && entry->getIPv6Address() >0) {
-                    entry->setResolved();
+                    qDebug("QmDNSBrowser serviceAdded: %s %s/%s:%d",
+                           qUtf8Printable(entry->getName()),
+                           qUtf8Printable(entry->getHostname()),
+                           qUtf8Printable(entry->getIPv4Address()),
+                           entry->getPort());
+
+                    entry->setResolutionStatus(QmDNSService::RESOLUTION_SUCCESS);
+                    emit self->serviceResolved(entry);
                 }
             }
         }
@@ -179,16 +225,19 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 
         avahi_free(txtList);
     } else if (event == AVAHI_RESOLVER_FAILURE) {
-        qWarning() << "QmDNSBrowser resolveCallback: " << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver)));
+        const char* error = avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver)));
+        qWarning() << "QmDNSBrowser resolveCallback: " << error;
+        entry->setResolutionStatus(QmDNSService::RESOLUTION_FAILURE);
+        entry->setErrorMessage(QString(error));
+
+        emit self->serviceNotResolved(entry);
     }
-}
 
-void QmDNSBrowser::serviceAdded() {
-    QmDNSService* s = reinterpret_cast<QmDNSService*>(sender());
+    {
+        std::lock_guard<std::mutex> lock(self->resolversMutex);
+        Q_UNUSED(lock);
+        std::remove(self->resolvers.begin(), self->resolvers.end(), resolver);
+    }
 
-    qDebug("QmDNSBrowser serviceAdded: %s %s/%s:%d",
-           qUtf8Printable(s->getName()),
-           qUtf8Printable(s->getHostname()),
-           qUtf8Printable(s->getIPv4Address()),
-           s->getPort());
+    avahi_service_resolver_free(resolver);
 }

@@ -19,11 +19,17 @@ class QmDNSService : public QObject
     Q_PROPERTY(QString ipv6Address READ getIPv6Address)
     Q_PROPERTY(QStringList txt READ getTxt)
 
-    Q_PROPERTY(bool resolved READ isResolved)
+    Q_PROPERTY(QString error READ getErrorMessage)
+    Q_PROPERTY(ResolutionStatus resolutionStatus READ getResolutionStatus)
 
 public:
     explicit QmDNSService(QObject *parent = nullptr, int ifIndex = -1, QString name = "", QString type = "", QString domain = "");
     virtual ~QmDNSService();
+
+    enum ResolutionStatus {
+        RESOLUTION_PENDING, RESOLUTION_SUCCESS, RESOLUTION_FAILURE
+    };
+    Q_ENUM(ResolutionStatus);
 
     int getInterface() const;
     QString getName() const;
@@ -37,17 +43,22 @@ public:
 
     QStringList getTxt() const;
 
+    QString errorMessage;
+
     void setIPv4Address(QString address);
     void setIPv6Address(QString address);
     void setHostname(QString hostname);
     void setPort(quint16 port);
     void setTxt(QStringList txt);
 
-    bool isResolved() const;
-    void setResolved();
+    ResolutionStatus getResolutionStatus() const;
+    void setResolutionStatus(ResolutionStatus status);
+
+    QString getErrorMessage();
+    void setErrorMessage(QString message);
 
 private:
-    bool resolved;
+    ResolutionStatus status;
 
     const int ifIndex;
     const QString name;
@@ -62,7 +73,6 @@ private:
     QStringList txt;
 
 signals:
-    void serviceResolved();
 
 public slots:
 };

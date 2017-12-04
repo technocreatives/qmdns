@@ -45,6 +45,14 @@ QStringList QmDNSService::getTxt() const {
     return txt;
 }
 
+QString QmDNSService::getErrorMessage() {
+    return errorMessage;
+}
+
+QmDNSService::ResolutionStatus QmDNSService::getResolutionStatus() const {
+    return status;
+}
+
 void QmDNSService::setIPv4Address(QString address) {
     this->ipv4Address = address;
 }
@@ -65,13 +73,10 @@ void QmDNSService::setTxt(QStringList txt) {
     this->txt = txt;
 }
 
-
-bool QmDNSService::isResolved() const {
-    return resolved;
+void QmDNSService::setErrorMessage(QString message) {
+    this->errorMessage = message;
 }
 
-void QmDNSService::setResolved() {
-    this->resolved = true;
-
-    emit serviceResolved();
+void QmDNSService::setResolutionStatus(ResolutionStatus status) {
+    this->status = status;
 }

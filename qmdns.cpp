@@ -102,6 +102,10 @@ void QmDNS::startServiceBrowse(QString serviceType) {
     }
 
     QmDNSBrowser* browser = new QmDNSBrowser(this, serviceType);
+    connect(browser, &QmDNSBrowser::serviceLost, this, &QmDNS::browserServiceLost);
+    connect(browser, &QmDNSBrowser::serviceFound, this, &QmDNS::browserServiceFound);
+    connect(browser, &QmDNSBrowser::serviceResolved, this, &QmDNS::browserServiceResolved);
+    connect(browser, &QmDNSBrowser::serviceNotResolved, this, &QmDNS::browserServiceNotResolved);
 
     AvahiServiceBrowser* serviceBrowser = avahi_service_browser_new(mDNSClient, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
         serviceType.toStdString().data(), NULL, (AvahiLookupFlags) 0, QmDNSBrowser::browserCallback, browser);
@@ -159,6 +163,22 @@ QList<QmDNSService*> QmDNS::getServices(QString serviceType) {
     }
 
     return QList<QmDNSService*>();
+}
+
+void QmDNS::browserServiceFound(QmDNSService* service) {
+    emit serviceFound(service);
+}
+
+void QmDNS::browserServiceLost(QmDNSService* service) {
+    emit serviceLost(service);
+}
+
+void QmDNS::browserServiceResolved(QmDNSService* service) {
+    emit serviceResolved(service);
+}
+
+void QmDNS::browserServiceNotResolved(QmDNSService* service) {
+    emit serviceNotResolved(service);
 }
 
 void QmDNS::clientCallback(AvahiClient* client, AvahiClientState state, void * userdata) {

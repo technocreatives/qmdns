@@ -53,8 +53,19 @@ private:
     #endif
 
 signals:
+    void serviceFound(QmDNSService* service);
+    void serviceLost(QmDNSService* service);
 
+    void serviceResolved(QmDNSService* service);
+    void serviceNotResolved(QmDNSService* service);
 public slots:
+
+private slots:
+    void browserServiceFound(QmDNSService* service);
+    void browserServiceLost(QmDNSService* service);
+
+    void browserServiceResolved(QmDNSService* service);
+    void browserServiceNotResolved(QmDNSService* service);
 };
 
 #endif // QMDNS_H
