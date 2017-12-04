@@ -3,13 +3,13 @@ CONFIG += c++11
 DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
-    qmdns.cpp \
+    $$PWD/qmdns.cpp \
     $$PWD/qmdnsservice.cpp \
     $$PWD/qmdnsbrowser.cpp \
     $$PWD/utils.cpp
 
 HEADERS += \
-    qmdns.h \
+    $$PWD/qmdns.h \
     $$PWD/qmdnsservice.h \
     $$PWD/qmdnsbrowser.h \
     $$PWD/utils.h
