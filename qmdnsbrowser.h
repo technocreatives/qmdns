@@ -21,7 +21,7 @@ class QmDNSBrowser : public QObject
     Q_OBJECT
 public:
     explicit QmDNSBrowser(QObject *parent, QString serviceType);
-    ~QmDNSBrowser();
+    virtual ~QmDNSBrowser();
 
     void init(AvahiServiceBrowser* browser);
     void destroy();

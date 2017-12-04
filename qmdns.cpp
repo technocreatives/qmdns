@@ -27,7 +27,8 @@ QmDNS::~QmDNS() {
         Q_UNUSED(lock);
 
         for (auto& pair : browsers) {
-            delete pair.second;
+            QmDNSBrowser* b = pair.second;
+            b->destroy();
         }
 
         browsers.clear();
@@ -130,7 +131,10 @@ void QmDNS::stopServiceBrowse(QString serviceType) {
 
         auto it = browsers.find(serviceType);
         if (it != browsers.end()) {
-            delete it->second;
+            QmDNSBrowser* b = it->second;
+            b->destroy();
+            b->deleteLater();
+
             browsers.erase(it);
         }
     }

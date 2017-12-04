@@ -24,6 +24,8 @@ void stop() {
     } catch (const std::exception& e) {
         std::cout << "Interrupted by exception: " << e.what() << "\n";
     }
+
+    QCoreApplication::quit();
 }
 
 int main(int argc, char *argv[])

@@ -73,7 +73,7 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
             }
 
             if (entry == nullptr) {
-                entry = new QmDNSService(nullptr, i, n, t, d);
+                entry = new QmDNSService(self, i, n, t, d);
                 connect(entry, &QmDNSService::serviceResolved, self, &QmDNSBrowser::serviceAdded);
                 self->services.push_back(entry);
             }
