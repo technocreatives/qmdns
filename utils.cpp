@@ -2,40 +2,40 @@
 
 #ifdef linux
 
-std::string avahiBrowserEventToStdString(AvahiBrowserEvent event) {
+QString avahiBrowserEventToQString(AvahiBrowserEvent event) {
     if (event == AVAHI_BROWSER_NEW) {
-        return std::string("New");
+        return QString("New");
     } else if (event == AVAHI_BROWSER_REMOVE) {
-        return std::string("Remove");
+        return QString("Remove");
     } else if (event == AVAHI_BROWSER_FAILURE) {
-        return std::string("Failure");
+        return QString("Failure");
     } else if (event == AVAHI_BROWSER_ALL_FOR_NOW) {
-        return std::string("All for now");
+        return QString("All for now");
     } else if (event == AVAHI_BROWSER_CACHE_EXHAUSTED) {
-        return std::string("Cache Exhausted");
+        return QString("Cache Exhausted");
     } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(event)) + ")";
+        return QString("Unknown") + " (" + QString::number(static_cast<int>(event)) + ")";
     }
 }
 
-std::string avahiClientStateToStdString(AvahiClientState state) {
+QString avahiClientStateToQString(AvahiClientState state) {
     if (state == AVAHI_CLIENT_S_RUNNING) {
-        return std::string("Running");
+        return QString("Running");
     } else if (state == AVAHI_CLIENT_S_REGISTERING) {
-        return std::string("Registering");
+        return QString("Registering");
     } else if (state == AVAHI_CLIENT_S_COLLISION) {
-        return std::string("Collision");
+        return QString("Collision");
     } else if (state == AVAHI_CLIENT_FAILURE) {
-        return std::string("Failure");
+        return QString("Failure");
     } else if (state == AVAHI_CLIENT_CONNECTING) {
-        return std::string("Connecting");
+        return QString("Connecting");
     } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(state)) + ")";
+        return QString("Unknown") + " (" + QString::number(static_cast<int>(state)) + ")";
     }
 }
 
-std::string avahiLookupResultFlagsToStdString(AvahiLookupResultFlags flags) {
-    std::string s;
+QString avahiLookupResultFlagsToQString(AvahiLookupResultFlags flags) {
+    QString s;
 
     if (flags & AVAHI_LOOKUP_RESULT_CACHED) {
         s += "cached,";
@@ -61,32 +61,32 @@ std::string avahiLookupResultFlagsToStdString(AvahiLookupResultFlags flags) {
         s += "static,";
     }
 
-    if (s.empty()) {
+    if (s.length() == 0) {
         s += "none";
     }
 
     return s;
 }
 
-std::string avahiResolveEventToStdString(AvahiResolverEvent event) {
+QString avahiResolveEventToQString(AvahiResolverEvent event) {
     if (event == AVAHI_RESOLVER_FOUND) {
-        return "Found";
+        return QString("Found");
     } else if (event == AVAHI_RESOLVER_FAILURE) {
-        return "Failure";
+        return QString("Failure");
     } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(event)) + ")";
+        return QString("Unknown") + " (" + QString::number(static_cast<int>(event)) + ")";
     }
 }
 
-std::string avahiProtocolToStdString(AvahiProtocol protocol) {
+QString avahiProtocolToQString(AvahiProtocol protocol) {
     if (protocol == AVAHI_PROTO_INET) {
-        return std::string("IPv4");
+        return QString("IPv4");
     } else if (protocol == AVAHI_PROTO_INET6) {
-        return std::string("IPv6");
+        return QString("IPv6");
     } else if (protocol == AVAHI_PROTO_UNSPEC) {
-        return std::string("Unspecified");
+        return QString("Unspecified");
     } else {
-        return std::string("Unknown") + " (" + std::to_string(static_cast<int>(protocol)) + ")";
+        return QString("Unknown") + " (" + QString::number(static_cast<int>(protocol)) + ")";
     }
 }
 

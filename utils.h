@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <QString>
+
 #ifdef linux
 
 #include <avahi-client/client.h>
@@ -9,13 +11,11 @@
 #include <avahi-common/malloc.h>
 #include <avahi-common/error.h>
 
-#include <string>
-
-std::string avahiBrowserEventToStdString(AvahiBrowserEvent event);
-std::string avahiClientStateToStdString(AvahiClientState state);
-std::string avahiLookupResultFlagsToStdString(AvahiLookupResultFlags flags);
-std::string avahiProtocolToStdString(AvahiProtocol protocol);
-std::string avahiResolveEventToStdString(AvahiResolverEvent event);
+QString avahiBrowserEventToQString(AvahiBrowserEvent event);
+QString avahiClientStateToQString(AvahiClientState state);
+QString avahiLookupResultFlagsToQString(AvahiLookupResultFlags flags);
+QString avahiProtocolToQString(AvahiProtocol protocol);
+QString avahiResolveEventToQString(AvahiResolverEvent event);
 
 #endif // linux
 

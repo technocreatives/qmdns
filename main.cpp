@@ -1,28 +1,33 @@
 #include <QCoreApplication>
+#include <QDebug>
 #include <QThread>
 #include <QTimer>
-#include <iostream>
 
 #include "qmdns.h"
+
 
 QmDNS mdns;
 QString type("_http._tcp");
 
 void start() {
+    qDebug() << "start";
 
     try {
         mdns.init();
+
         mdns.startServiceBrowse(type);
     } catch (const std::exception& e) {
-        std::cout << "Interrupted by exception: " << e.what() << "\n";
+        qFatal("Interrupted by exception: %s", e.what());
     }
 }
 
 void stop() {
+    qDebug() << "stop";
+
     try {
         mdns.stopServiceBrowse(type);
     } catch (const std::exception& e) {
-        std::cout << "Interrupted by exception: " << e.what() << "\n";
+        qFatal("Interrupted by exception: %s", e.what());
     }
 
     QCoreApplication::quit();

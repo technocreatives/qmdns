@@ -42,17 +42,16 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
 
     QmDNSBrowser* self = reinterpret_cast<QmDNSBrowser*>(userdata);
 
-    std::cout << "QmDNS browserCallback: " << avahiBrowserEventToStdString(event) << "\n";
+    qDebug() << "QmDNS browserCallback:" << qUtf8Printable(avahiBrowserEventToQString(event));
 
     if (event == AVAHI_BROWSER_NEW) {
-        std::cout << "QmDNS browserCallback: "
-            << " " << interface
-            << " " << avahiProtocolToStdString(protocol)
-            << " " << type
-            << " " << domain
-            << " " << avahiLookupResultFlagsToStdString(flags)
-            <<  " " << name
-            << "\n";
+        qDebug() << "QmDNS browserCallback:"
+            << interface
+            << qUtf8Printable(avahiProtocolToQString(protocol))
+            << type
+            << domain
+            << qUtf8Printable(avahiLookupResultFlagsToQString(flags))
+            << name;
 
         // Add service entry
         {
@@ -91,14 +90,13 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
             self->resolvers.push_back(resolver);
 
         } else {
-            std::cerr << "QmDNS browserCallback: Failed to create service resolver for"
-                      << " " << interface
-                      << " " << avahiProtocolToStdString(protocol)
-                      << " " << type
-                      << " " << domain
-                      << " " << avahiLookupResultFlagsToStdString(flags)
-                      <<  " " << name
-                      << "\n";
+            qWarning() << "QmDNS browserCallback: Failed to create service resolver for"
+                      << interface
+                      << qUtf8Printable(avahiProtocolToQString(protocol))
+                      << type
+                      << domain
+                      << qUtf8Printable(avahiLookupResultFlagsToQString(flags))
+                      << name;
         }
     }
 }
@@ -109,7 +107,7 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 
     QmDNSBrowser* self = reinterpret_cast<QmDNSBrowser*>(userdata);
 
-    std::cout << "QmDNSBrowser resolveCallback success: " << avahiResolveEventToStdString(event) << "\n";
+    qDebug() << "QmDNSBrowser resolveCallback success: " << avahiResolveEventToQString(event);
 
     if (event == AVAHI_RESOLVER_FOUND) {
         char address[AVAHI_ADDRESS_STR_MAX];
@@ -167,42 +165,30 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 
         char* txtList = avahi_string_list_to_string(txt);
 
-        std::cout << "QmDNSBrowser resolveCallback: "
-                  << " " << interface
-                  << " " << avahiProtocolToStdString(protocol)
-                  << " " << type
-                  << " " << domain
-                  << " " << address
-                  << " " << host_name
-                  << ":" << port
-                  << " " << avahiLookupResultFlagsToStdString(flags)
-                  << " " << name
-                  << " " << txtList
-                  << "\n";
+        qDebug() << "QmDNSBrowser resolveCallback: "
+                  << interface
+                  << qUtf8Printable(avahiProtocolToQString(protocol))
+                  << type
+                  << domain
+                  << address
+                  << host_name
+                  << port
+                  << qUtf8Printable(avahiLookupResultFlagsToQString(flags))
+                  << name
+                  << txtList;
 
         avahi_free(txtList);
     } else if (event == AVAHI_RESOLVER_FAILURE) {
-         std::cerr << "QmDNSBrowser resolveCallback: " << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver))) << "\n";
+        qWarning() << "QmDNSBrowser resolveCallback: " << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(resolver)));
     }
-
-    /*
-    {
-        std::lock_guard<std::mutex> lock(self->resolversMutex);
-        Q_UNUSED(lock);
-
-        auto it = std::find(self->resolvers.begin(), self->resolvers.end(), resolver);
-        if (it != self->resolvers.end()) {
-            self->resolvers.erase(it);
-        }
-    }
-    avahi_service_resolver_free(resolver);
-    */
 }
 
 void QmDNSBrowser::serviceAdded() {
     QmDNSService* s = reinterpret_cast<QmDNSService*>(sender());
-    std::cout << "QmDNSBrowser serviceAdded: " << s->getName().toStdString()
-              << " " << s->getHostname().toStdString()
-              << "/" << s->getIPv4Address().toStdString()
-              << ":" << s->getPort() << "\n";
+
+    qDebug("QmDNSBrowser serviceAdded: %s %s/%s:%d",
+           qUtf8Printable(s->getName()),
+           qUtf8Printable(s->getHostname()),
+           qUtf8Printable(s->getIPv4Address()),
+           s->getPort());
 }

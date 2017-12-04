@@ -1,20 +1,18 @@
 #include "qmdns.h"
 
 #include <stdexcept>
-#include <iostream>
 #include <thread>
 #include <utility>
+
+#include <QDebug>
+
+#include "utils.h"
 
 QmDNS::QmDNS(QObject *parent) : QObject(parent) {
 
 }
 
 #ifdef linux
-std::string avahiBrowserEventToStdString(AvahiBrowserEvent event);
-std::string avahiClientStateToStdString(AvahiClientState state);
-std::string avahiLookupResultFlagsToStdString(AvahiLookupResultFlags flags);
-std::string avahiProtocolToStdString(AvahiProtocol protocol);
-std::string avahiResolveEventToStdString(AvahiResolverEvent event);
 
 QmDNS::~QmDNS() {
     initialized = false;
@@ -51,13 +49,13 @@ QmDNS::~QmDNS() {
 
 void QmDNS::init() {
     if (initialized) {
-        throw std::runtime_error(std::string("QmDNS init: already initialized"));
+        throw std::runtime_error("QmDNS init: already initialized");
     }
 
     try {
         mDNSPoll = avahi_simple_poll_new();
         if (mDNSPoll == nullptr) {
-            throw std::runtime_error(std::string("QmDNS init: fail to create poll"));
+            throw std::runtime_error("QmDNS init: fail to create poll");
         }
 
         int clientError = 0;
@@ -67,7 +65,7 @@ void QmDNS::init() {
         }
 
         const char* version = avahi_client_get_version_string(mDNSClient);
-        std::cout << "Init mDNSClient using " << version << "\n";
+        qDebug() << "Init mDNSClient using " << version;
 
     } catch (const std::exception& e) {
         if (mDNSClient != nullptr) {
@@ -122,7 +120,7 @@ void QmDNS::startServiceBrowse(QString serviceType) {
 
 void QmDNS::stopServiceBrowse(QString serviceType) {
     if (!initialized) {
-        throw std::runtime_error(std::string("QmDNS stopServiceDiscovery: not initialized"));
+        throw std::runtime_error("QmDNS stopServiceDiscovery: not initialized");
     }
 
     {
@@ -142,7 +140,7 @@ void QmDNS::stopServiceBrowse(QString serviceType) {
 
 QList<QmDNSService*> QmDNS::getServices(QString serviceType) {
     if (!initialized) {
-        throw std::runtime_error(std::string("QmDNS stopServiceDiscovery: not initialized"));
+        throw std::runtime_error("QmDNS stopServiceDiscovery: not initialized");
     }
 
     QmDNSBrowser* browser = nullptr;
@@ -167,7 +165,7 @@ void QmDNS::clientCallback(AvahiClient* client, AvahiClientState state, void * u
     Q_UNUSED(client);
     Q_UNUSED(userdata);
 
-    std::cout << "QmDNS clientCallback: " << avahiClientStateToStdString(state) << "\n";
+    qDebug("QmDNS clientCallback: %s", qUtf8Printable(avahiClientStateToQString(state)));
 }
 
 #endif // linux
