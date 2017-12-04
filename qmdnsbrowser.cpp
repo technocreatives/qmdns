@@ -81,7 +81,11 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
             }
 
             if (entry == nullptr) {
-                entry = new QmDNSService(self, i, n, t, d);
+                entry = new QmDNSService(nullptr, i, n, t, d);
+
+                // Parent not in the same thread, so move it first
+                entry->moveToThread(self->thread());
+                entry->setParent(self);
 
                 // Add protocol support
                 if (protocol == AVAHI_PROTO_INET) {
@@ -168,7 +172,7 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
 
     QmDNSBrowser* self = reinterpret_cast<QmDNSBrowser*>(userdata);
 
-    qDebug() << "QmDNSBrowser resolveCallback success: " << avahiResolveEventToQString(event);
+    qDebug() << "QmDNSBrowser resolveCallback event: " << avahiResolveEventToQString(event);
 
     int i = static_cast<int>(interface);
     QString n(name);

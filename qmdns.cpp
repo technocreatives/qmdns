@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <QDebug>
+#include <QThread>
 
 #include "utils.h"
 
