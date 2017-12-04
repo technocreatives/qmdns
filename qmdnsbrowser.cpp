@@ -82,8 +82,25 @@ void QmDNSBrowser::browserCallback(AvahiServiceBrowser* serviceBrowser, AvahiIfI
 
             if (entry == nullptr) {
                 entry = new QmDNSService(self, i, n, t, d);
+
+                // Add protocol support
+                if (protocol == AVAHI_PROTO_INET) {
+                    entry->setIPv4Supported(true);
+                } else if (protocol == AVAHI_PROTO_INET6) {
+                    entry->setIPv6Supported(true);
+                }
+
                 self->services.push_back(entry);
                 emit self->serviceFound(entry);
+            } else {
+
+                // Add second protocol support
+                if (protocol == AVAHI_PROTO_INET) {
+                    entry->setIPv4Supported(true);
+                } else if (protocol == AVAHI_PROTO_INET6) {
+                    entry->setIPv6Supported(true);
+                }
+
             }
         }
 
@@ -205,7 +222,17 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
                     entry->setPort(port);
                 }
 
-                if (entry->getIPv4Address().size() > 0) {
+                bool resolved = false;
+
+                if (entry->isIPv4Supported() && entry->isIPv6Supported()) {
+                    resolved = entry->getIPv4Address().size() > 0 && entry->getIPv6Address().size() > 0;
+                } else if (entry->isIPv4Supported()) {
+                    resolved = entry->getIPv4Address().size() > 0;
+                } else if (entry->isIPv6Supported()) {
+                    resolved = entry->getIPv6Address().size() > 0;
+                }
+
+                if (resolved) {
                     qDebug("QmDNSBrowser serviceAdded: %s %s/%s:%d",
                            qUtf8Printable(entry->getName()),
                            qUtf8Printable(entry->getHostname()),

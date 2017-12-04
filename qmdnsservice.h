@@ -15,6 +15,10 @@ class QmDNSService : public QObject
 
     Q_PROPERTY(quint16 port READ getPort)
     Q_PROPERTY(QString hostname READ getHostname)
+
+    Q_PROPERTY(bool ipv4Supported READ isIPv4Supported)
+    Q_PROPERTY(bool ipv6Supported READ isIPv6Supported)
+
     Q_PROPERTY(QString ipv4Address READ getIPv4Address)
     Q_PROPERTY(QString ipv6Address READ getIPv6Address)
     Q_PROPERTY(QStringList txt READ getTxt)
@@ -36,6 +40,9 @@ public:
     QString getType() const;
     QString getDomain() const;
 
+    bool isIPv4Supported() const;
+    bool isIPv6Supported() const;
+
     QString getIPv4Address() const;
     QString getIPv6Address() const;
     QString getHostname() const;
@@ -43,7 +50,8 @@ public:
 
     QStringList getTxt() const;
 
-    QString errorMessage;
+    void setIPv4Supported(bool supported);
+    void setIPv6Supported(bool supported);
 
     void setIPv4Address(QString address);
     void setIPv6Address(QString address);
@@ -59,11 +67,15 @@ public:
 
 private:
     ResolutionStatus status;
+    QString errorMessage;
 
     const int ifIndex = -1;
     const QString name;
     const QString type;
     const QString domain;
+
+    bool ipv4Support;
+    bool ipv6Support;
 
     QString ipv6Address;
     QString ipv4Address;

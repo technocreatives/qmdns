@@ -29,6 +29,14 @@ QString QmDNSService::getHostname() const {
     return hostname;
 }
 
+bool QmDNSService::isIPv4Supported() const {
+    return ipv4Support;
+}
+
+bool QmDNSService::isIPv6Supported() const {
+    return ipv6Support;
+}
+
 QString QmDNSService::getIPv4Address() const {
     return ipv4Address;
 }
@@ -51,6 +59,14 @@ QString QmDNSService::getErrorMessage() {
 
 QmDNSService::ResolutionStatus QmDNSService::getResolutionStatus() const {
     return status;
+}
+
+void QmDNSService::setIPv4Supported(bool supported) {
+    this->ipv4Support = supported;
+}
+
+void QmDNSService::setIPv6Supported(bool supported) {
+    this->ipv6Support = supported;
 }
 
 void QmDNSService::setIPv4Address(QString address) {
