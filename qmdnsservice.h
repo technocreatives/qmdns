@@ -60,7 +60,7 @@ public:
 private:
     ResolutionStatus status;
 
-    const int ifIndex;
+    const int ifIndex = -1;
     const QString name;
     const QString type;
     const QString domain;
@@ -68,7 +68,7 @@ private:
     QString ipv6Address;
     QString ipv4Address;
     QString hostname;
-    quint16 port;
+    quint16 port = 0;
 
     QStringList txt;
 
