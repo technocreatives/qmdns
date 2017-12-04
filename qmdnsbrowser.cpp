@@ -196,7 +196,7 @@ void QmDNSBrowser::resolveCallback(AvahiServiceResolver *resolver, AvahiIfIndex 
                     entry->setPort(port);
                 }
 
-                if (entry->getIPv4Address().size() > 0 && entry->getIPv6Address() >0) {
+                if (entry->getIPv4Address().size() > 0) {
                     qDebug("QmDNSBrowser serviceAdded: %s %s/%s:%d",
                            qUtf8Printable(entry->getName()),
                            qUtf8Printable(entry->getHostname()),
