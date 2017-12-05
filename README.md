@@ -48,7 +48,7 @@ int main(int argc, char** agv) {
 
 ## Using on QML
 
-``
+```
 import com.technocreatives.qmdns 0.1
 
 QmDNS {
